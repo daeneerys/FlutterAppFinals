@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "413784126343",
+    "project_id": "tomasvirtualpet",
+    "storage_bucket": "tomasvirtualpet.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:413784126343:android:f2fd2739e0d0e429935922",
+        "android_client_info": {
+          "package_name": "com.example.tomas_tigerpet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpbeSlqVa-S7WElGkNY2DT8SeUOOSEjQA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
