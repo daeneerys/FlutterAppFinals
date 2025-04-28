@@ -51,18 +51,18 @@ class _HomeState extends State<Home> {
   Map<String, int> foodInventory = {};
 
   Map<String, Map<String, int>> foodEffects = {
-    'bread': {'hunger': 5, 'happiness': 2},
-    'candy': {'hunger': 3, 'happiness': 8},
-    'cheese': {'hunger': 8, 'happiness': 4},
-    'chocolate': {'hunger': 4, 'happiness': 10},
-    'eggs': {'hunger': 10, 'happiness': 3},
-    'hotdogsandwich': {'hunger': 12, 'happiness': 5},
-    'icecream': {'hunger': 5, 'happiness': 9},
-    'meat': {'hunger': 20, 'happiness': 4},
-    'nuggetsfries': {'hunger': 15, 'happiness': 6},
-    'pizza': {'hunger': 18, 'happiness': 7},
-    'salad': {'hunger': 7, 'happiness': 2},
-    'salmon': {'hunger': 20, 'happiness': 5},
+    'bread': {'hunger': 5, 'happiness': 2, 'experience': 3},
+    'candy': {'hunger': 3, 'happiness': 8, 'experience': 4},
+    'cheese': {'hunger': 8, 'happiness': 4, 'experience': 5},
+    'chocolate': {'hunger': 4, 'happiness': 10, 'experience': 5},
+    'eggs': {'hunger': 10, 'happiness': 3, 'experience': 5},
+    'hotdogsandwich': {'hunger': 12, 'happiness': 5, 'experience': 6},
+    'icecream': {'hunger': 5, 'happiness': 9, 'experience': 5},
+    'meat': {'hunger': 20, 'happiness': 4, 'experience': 7},
+    'nuggetsfries': {'hunger': 15, 'happiness': 6, 'experience': 6},
+    'pizza': {'hunger': 18, 'happiness': 7, 'experience': 7},
+    'salad': {'hunger': 7, 'happiness': 2, 'experience': 3},
+    'salmon': {'hunger': 20, 'happiness': 5, 'experience': 7},
   };
 
   //Coins
@@ -96,9 +96,9 @@ class _HomeState extends State<Home> {
         Duration diff = now.difference(lastUpdated);
 
         // Calculate decays/restores
-        int hungerDecayAmount = 5 * (diff.inHours ~/ 3);  // every 3 hours
-        int happinessDecayAmount = 5 * diff.inHours;      // every hour
-        int energyRestoreAmount = 5 * (diff.inHours ~/ 2); // every 2 hours
+        int hungerDecayAmount = 5 * (diff.inHours ~/ 3);
+        int happinessDecayAmount = 5 * diff.inHours;
+        int energyRestoreAmount = 5 * (diff.inHours ~/ 2);
 
         int newHunger = petStats['hunger'] - hungerDecayAmount;
         int newHappiness = petStats['happiness'] - happinessDecayAmount;
@@ -251,10 +251,13 @@ class _HomeState extends State<Home> {
         // Apply food effects
         int hungerGain = foodEffects[food]?['hunger'] ?? 10;
         int happinessGain = foodEffects[food]?['happiness'] ?? 5;
+        int experienceGain = foodEffects[food]?['experience'] ?? 3;
 
         //Increase Stats
         hunger = (hunger + hungerGain).clamp(0, 100);
         _changeMood((happiness + happinessGain).clamp(0, 100));
+        addExperience(experienceGain);
+
 
         // Show food animation near tiger
         droppedFoodImage = 'assets/images/foods/${food}_food.png';
