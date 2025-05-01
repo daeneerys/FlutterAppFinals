@@ -333,6 +333,79 @@ class _HomeState extends State<Home> {
     );
   }
 
+  //Open Shop
+  void openShop(){
+    showModalBottomSheet(
+      context: context,
+      builder:(context) => Container(
+        height: 300,
+        child:Center(child: Text('Welcome to the Shop!')),
+      ),
+    );
+  }
+
+  void openBag() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        child: Builder(
+          builder: (context) {
+            double width = MediaQuery.of(context).size.width;
+            double height = MediaQuery.of(context).size.height;
+            double modalWidth = width * 0.85; // Responsive width
+            double modalHeight = height * 0.6; // Responsive height
+
+            return Container(
+              width: modalWidth,
+              height: modalHeight,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Your Bag',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: width < 600 ? 3 : 5, // 3 items on smaller devices, 5 on larger ones
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                      ),
+                      itemCount: foodKeys.length, // number of items
+                      itemBuilder: (context, index) {
+                        final foodName = foodKeys[index];
+                        final quantity = foodInventory[foodName] ?? 0;
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/images/foods/${foodName}_food.png',
+                              height: width < 600 ? 40 : 80,
+                            ),
+                            const SizedBox(height: 4),
+                            Text('x$quantity', style: TextStyle(fontSize: width < 600 ? 12 : 16)),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     String selectedFood = foodKeys[selectedFoodIndex];
@@ -438,39 +511,69 @@ class _HomeState extends State<Home> {
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_left, size: 40),
-                    onPressed: () => navigateFood(-1),
-                  ),
-                  Align(
-                    alignment: Alignment.center,
-                    child: Draggable<String>(
-                      data: selectedFood,
-                      feedback: Image.asset('assets/images/foods/${selectedFood}_food.png', height: 80),
-                      childWhenDragging: SizedBox(
-                        height: 100,
-                        child: Opacity(
-                          opacity: 0.3,
-                          child: Image.asset('assets/images/foods/${selectedFood}_food.png', height: 80),
-                        ),
-                      ),
+                  GestureDetector(
+                    onTap: openBag,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 30),
                       child: Column(
                         children: [
-                          Image.asset('assets/images/foods/${selectedFood}_food.png', height: 80),
-                          Text('${foodInventory[selectedFood]}'),
+                          Image.asset('assets/images/etc/bag_home.png', height: 60),
+                          const Text('Bag', style: TextStyle(fontSize: 12)),
                         ],
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.arrow_right, size: 40),
-                    onPressed: () => navigateFood(1),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_left, size: 40),
+                          onPressed: () => navigateFood(-1),
+                        ),
+                        Align(
+                          alignment: Alignment.center,
+                          child: Draggable<String>(
+                            data: selectedFood,
+                            feedback: Image.asset('assets/images/foods/${selectedFood}_food.png', height: 80),
+                            childWhenDragging: SizedBox(
+                              height: 100,
+                              child: Opacity(
+                                opacity: 0.3,
+                                child: Image.asset('assets/images/foods/${selectedFood}_food.png', height: 80),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Image.asset('assets/images/foods/${selectedFood}_food.png', height: 80),
+                                Text('${foodInventory[selectedFood]}'),
+                              ],
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.arrow_right, size: 40),
+                          onPressed: () => navigateFood(1),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: openShop,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 30),
+                      child: Column(
+                        children: [
+                          Image.asset('assets/images/etc/shopping_cart.png', height: 60),
+                          const Text('Shop', style: TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
+            )
           ],
         ),
       ),
