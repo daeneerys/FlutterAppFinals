@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import '../services/auth_service.dart';
-import 'screens/home.dart';
-import 'screens/login.dart';
+import 'screens/splash_screen.dart'; // <-- Import splash screen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +17,6 @@ class TomasPetApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    AuthService authService = AuthService();
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Tomas the Virtual Pet',
@@ -27,7 +24,7 @@ class TomasPetApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.yellow),
         useMaterial3: true,
       ),
-      home: authService.getCurrentUser() != null ? const Home() : const LoginScreen(),
+      home: const SplashScreen(), // <-- Start with splash screen
     );
   }
 }
