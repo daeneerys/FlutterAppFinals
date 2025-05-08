@@ -305,18 +305,33 @@ class _HomeState extends State<Home> {
   }
 
   //Experience
-  void addExperience(int amount) {
+  void addExperience(int amount) async {
     final thresholds = generateExperienceThresholds();
 
     setState(() {
       experience += amount;
 
-      // Level up while experience exceeds the threshold
       while (level < 99 && experience >= thresholds[level]!) {
-        experience -= thresholds[level]!; // carry over extra XP
+        experience -= thresholds[level]!;
         levelUp();
       }
     });
+
+    // Save after updating experience and level
+    String userId = _auth.currentUser!.uid;
+    await dbService.updateDatabase(
+      userId: userId,
+      hunger: hunger,
+      happiness: happiness,
+      energy: energy,
+      currentPetImage: currentPetImage,
+      currentBlinkImage: currentBlinkImage,
+      coins: coins,
+      level: level,
+      experience: experience,
+      foodInventory: foodInventory,
+      lastUpdated: DateTime.now(),
+    );
   }
 
   // Level up method
