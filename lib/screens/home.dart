@@ -12,7 +12,11 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
+
+  late AnimationController _controller;
+  late Animation<Offset> _slideAnimation;
+  bool _isGamesVisible = false;
   //Database
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -421,6 +425,66 @@ class _HomeState extends State<Home> {
     );
   }
 
+  void openGames() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: Colors.white,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          height: MediaQuery.of(context).size.height * 0.4, // 40% of screen
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Mini Games',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  children: [
+                    buildGameCard('Memory Match', 'assets/images/games/memory.png'),
+                    buildGameCard('Puzzle Pop', 'assets/images/games/puzzle.png'),
+                    // Add more games as needed
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  Widget buildGameCard(String title, String imagePath) {
+    return GestureDetector(
+      onTap: () {
+        // Navigate or open the game
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(imagePath, height: 60),
+            const SizedBox(height: 10),
+            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     String selectedFood = foodKeys[selectedFoodIndex];
@@ -584,6 +648,16 @@ class _HomeState extends State<Home> {
                           const Text('Shop', style: TextStyle(fontSize: 12)),
                         ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: openGames,
+                    child: Column(
+                      children: [
+                        Image.asset('assets/images/etc/games_icon.png', height: 60), // Add this image
+                        const Text('Games', style: TextStyle(fontSize: 12)),
+                      ],
                     ),
                   ),
                 ],
