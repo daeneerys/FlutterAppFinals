@@ -33,6 +33,8 @@ dependencies:
   firebase_core: ^3.12.1
   cloud_firestore: ^5.6.5
   firebase_auth: ^5.5.2
+  shared_preferences: ^2.2.2
+  confetti: ^0.7.0
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -74,6 +76,7 @@ flutter:
     - assets/images/etc/shopping_cart.png
     - assets/images/etc/bag_home.png
     - assets/images/etc/games_icon.png
+    - assets/images/games/CardMatch.png
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
