@@ -14,6 +14,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
+  Color _backgroundColor = Colors.green[300]!;
   late AnimationController _controller;
   late Animation<Offset> _slideAnimation;
   bool _isGamesVisible = false;
@@ -28,7 +29,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   int hunger = 50;
   int happiness = 50;
   int energy = 50;
-
+  int coins = 100;
+  int level = 1;
+  int experience = 0;
   //Tiger Animation
 
   bool isBlinking = false;
@@ -105,14 +108,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     return prices[food] ?? 20; // Default price
   }
 
-
-  //Coins
-  int coins = 100;
-  //Level
-  int level = 1;
-  //Experience
-  int experience = 0;
-
   @override
   void initState() {
     super.initState();
@@ -129,6 +124,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       DocumentSnapshot snapshot = await _firestore.collection('users').doc(currentUser!.uid).get();
       if (snapshot.exists) {
         Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        String? colorName = await dbService.getBackgroundPreference(currentUser!.uid);
+        if (colorName != null) {
+          setState(() {
+            _backgroundColor = _colorFromString(colorName);
+          });
+        }
         Map<String, dynamic> petStats = data['petStats'];
 
         // Get the lastUpdated time
@@ -168,6 +169,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           currentBlinkImage = 'assets/images/tiger/tiger_sad_blink.png';
         }
 
+
+        experience = petStats['experience'];
+        level = petStats['level'];
+        coins = petStats['coins'];
+
         // Save updated values to Firestore
         await dbService.updateDatabase(
           userId: currentUser!.uid,
@@ -185,6 +191,16 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       }
     } catch (e) {
       print("Error loading data: $e");
+    }
+  }
+
+  Color _colorFromString(String name) {
+    switch (name.toLowerCase()) {
+      case 'blue': return Colors.blue[200]!;
+      case 'purple': return Colors.purple[200]!;
+      case 'orange': return Colors.orange[200]!;
+      case 'pink': return Colors.pink[200]!;
+      default: return Colors.green[300]!;
     }
   }
 
@@ -658,6 +674,92 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
+  void _openSettings() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: dialogShape,
+      backgroundColor: Colors.white,
+      builder: (context) => Container(
+        padding: dialogPadding,
+        height: MediaQuery.of(context).size.height * 0.4,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Settings', style: dialogTitleStyle),
+            const SizedBox(height: 20),
+
+            // Background Color Picker
+            Text('Background Color', style: TextStyle(fontSize: 18)),
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildColorOption(Colors.green[300]!, 'Default'),
+                  _buildColorOption(Colors.blue[200]!, 'Blue'),
+                  _buildColorOption(Colors.purple[200]!, 'Purple'),
+                  _buildColorOption(Colors.orange[200]!, 'Orange'),
+                  _buildColorOption(Colors.pink[200]!, 'Pink'),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/login',
+                      (Route<dynamic> route) => false,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                minimumSize: Size(double.infinity, 50),
+              ),
+              child: Text('Log Out', style: TextStyle(color: Colors.white)),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildColorOption(Color color, String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                _backgroundColor = color;
+              });
+              // Save the color preference to Firestore
+              dbService.saveBackgroundPreference(currentUser!.uid, label.toLowerCase());
+              Navigator.pop(context);
+            },
+            child: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(25),
+                border: Border.all(
+                  color: _backgroundColor == color ? Colors.black : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(label),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     String selectedFood = foodKeys[selectedFoodIndex];
@@ -668,7 +770,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       );
     }
     return Scaffold(
-      backgroundColor: Colors.green[300],
+      backgroundColor: _backgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -730,6 +832,28 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         ),
                       ],
                     ),
+                  ),
+                ],
+              ),
+            ),
+            // New row for games and settings buttons
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Games button on left
+                  IconButton(
+                    icon: Image.asset('assets/images/etc/games_icon.png', height: 40),
+                    onPressed: openGames,
+                    tooltip: 'Mini Games',
+                  ),
+
+                  // Settings button on right
+                  IconButton(
+                    icon: Icon(Icons.settings, size: 30),
+                    onPressed: _openSettings,
+                    tooltip: 'Settings',
                   ),
                 ],
               ),
@@ -824,15 +948,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: openGames,
-                    child: Column(
-                      children: [
-                        Image.asset('assets/images/etc/games_icon.png', height: 60), // Add this image
-                        const Text('Games', style: TextStyle(fontSize: 12)),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             )

@@ -102,4 +102,21 @@ class DatabaseService {
     });
   }
 
+  Future<void> saveBackgroundPreference(String userId, String colorName) async {
+    await _firestore.collection('users').doc(userId).set({
+      'preferences': {
+        'backgroundColor': colorName,
+        'lastUpdated': FieldValue.serverTimestamp(),
+      }
+    }, SetOptions(merge: true));
+  }
+
+  Future<String?> getBackgroundPreference(String userId) async {
+    DocumentSnapshot snapshot = await _firestore.collection('users').doc(userId).get();
+    if (snapshot.exists) {
+      Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+      return data['preferences']?['backgroundColor'] as String?;
+    }
+    return null;
+  }
 }

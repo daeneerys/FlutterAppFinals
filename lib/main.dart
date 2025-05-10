@@ -28,6 +28,10 @@ class TomasPetApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: authService.getCurrentUser() != null ? const Home() : const LoginScreen(),
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/home': (context) => const Home(),
+      },
     );
   }
 }
