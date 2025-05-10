@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/database_service.dart';
 import 'dart:math';
+import 'splash_screen.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -830,10 +831,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     String selectedFood = foodKeys[selectedFoodIndex];
     final thresholds = generateExperienceThresholds();
-    if(_isLoading){
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+    if (_isLoading) {
+      return const SplashScreen(); // Replace with your custom splash widget
     }
     return Scaffold(
       backgroundColor: _backgroundColor,
