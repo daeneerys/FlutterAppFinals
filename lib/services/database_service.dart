@@ -56,15 +56,16 @@ class DatabaseService {
           'energy': energy.clamp(0, 100),
           'currentPetImage': currentPetImage,
           'currentBlinkImage': currentBlinkImage,
-          'coins': coins,
+          'coins': coins, // Ensure coins is included
           'level': level,
           'experience': experience,
           'lastUpdated': FieldValue.serverTimestamp()
         },
-        'foodInventory': foodInventory,
+        'foodInventory': foodInventory, // Ensure foodInventory is included
       }, SetOptions(merge: true));
     } catch (e) {
       print("Error updating database: $e");
+      rethrow; // Important to propagate errors
     }
   }
 
@@ -92,4 +93,13 @@ class DatabaseService {
     }
     return null;
   }
+
+  //Update coins
+  Future<void> updateCoins(String userId, int newAmount) async {
+    await _firestore.collection('users').doc(userId).update({
+      'petStats.coins': newAmount,
+      'petStats.lastUpdated': FieldValue.serverTimestamp(),
+    });
+  }
+
 }

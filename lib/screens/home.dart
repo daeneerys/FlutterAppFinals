@@ -46,6 +46,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   String? droppedFoodImage; // Store food image when feeding
   int selectedFoodIndex = 0;
 
+
   List<String> foodKeys = [
     'bread', 'candy', 'cheese', 'chocolate', 'eggs',
     'hotdogsandwich', 'icecream', 'meat', 'nuggetsfries',
@@ -69,6 +70,42 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     'salmon': {'hunger': 20, 'happiness': 5, 'experience': 7},
   };
 
+  final Map<String, int> foodPrices = {
+    'bread': 10,
+    'candy': 15,
+    'cheese': 20,
+    'chocolate': 25,
+    'eggs': 15,
+    'hotdogsandwich': 30,
+    'icecream': 20,
+    'meat': 35,
+    'nuggetsfries': 25,
+    'pizza': 30,
+    'salad': 15,
+    'salmon': 35,
+  };
+
+  // Helper method to get food price
+  int _getFoodPrice(String food) {
+    // Define your pricing logic here
+    final prices = {
+      'bread': 10,
+      'candy': 15,
+      'cheese': 20,
+      'chocolate': 25,
+      'eggs': 15,
+      'hotdogsandwich': 30,
+      'icecream': 20,
+      'meat': 35,
+      'nuggetsfries': 25,
+      'pizza': 30,
+      'salad': 15,
+      'salmon': 35,
+    };
+    return prices[food] ?? 20; // Default price
+  }
+
+
   //Coins
   int coins = 100;
   //Level
@@ -80,6 +117,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     currentUser = _auth.currentUser;
+    print("Current user ID: ${currentUser?.uid}");
     _loadData();
     _startBlinking();
     _startMoodChanging();
@@ -246,32 +284,26 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  void feedTiger(String food) {
-    if (foodInventory[food]! > 0) {
-      setState(() {
-        // Reduce food count
-        foodInventory[food] = (foodInventory[food]! - 1).clamp(0, 99);
+  void feedTiger(String food) async {
+    if (foodInventory[food]! <= 0) return;
 
-        // Apply food effects
+    try {
+      setState(() {
+        foodInventory[food] = foodInventory[food]! - 1;
+
         int hungerGain = foodEffects[food]?['hunger'] ?? 10;
         int happinessGain = foodEffects[food]?['happiness'] ?? 5;
         int experienceGain = foodEffects[food]?['experience'] ?? 3;
 
-        //Increase Stats
         hunger = (hunger + hungerGain).clamp(0, 100);
-        _changeMood((happiness + happinessGain).clamp(0, 100));
-        addExperience(experienceGain);
-
-
-        // Show food animation near tiger
+        happiness = (happiness + happinessGain).clamp(0, 100);
         droppedFoodImage = 'assets/images/foods/${food}_food.png';
       });
 
-      // Extract userId from currentUser
-      String userId = _auth.currentUser!.uid;
+      addExperience(foodEffects[food]?['experience'] ?? 3);
 
-      // Save updated stats to Firestore
-      dbService.updateDatabase(
+      String userId = _auth.currentUser!.uid;
+      await dbService.updateDatabase(
         userId: userId,
         hunger: hunger,
         happiness: happiness,
@@ -285,10 +317,16 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         lastUpdated: DateTime.now(),
       );
 
-      // Remove food after animation
       Future.delayed(const Duration(seconds: 1), () {
-        setState(() => droppedFoodImage = null);
+        if (mounted) setState(() => droppedFoodImage = null);
       });
+    } catch (e) {
+      print("Error feeding tiger: $e");
+      if (mounted) {
+        setState(() {
+          foodInventory[food] = (foodInventory[food] ?? 0) + 1;
+        });
+      }
     }
   }
 
@@ -311,115 +349,235 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   //Experience
   void addExperience(int amount) async {
     final thresholds = generateExperienceThresholds();
+    bool leveledUp = false;
 
-    setState(() {
-      experience += amount;
+    try {
+      setState(() {
+        experience += amount;
 
-      while (level < 99 && experience >= thresholds[level]!) {
-        experience -= thresholds[level]!;
-        levelUp();
+        // Check for level up
+        while (level < 99 && experience >= thresholds[level]!) {
+          experience -= thresholds[level]!;
+          level++;
+          leveledUp = true;
+        }
+      });
+
+      // Save after updating experience and level
+      String userId = _auth.currentUser!.uid;
+      await dbService.updateDatabase(
+        userId: userId,
+        hunger: hunger,
+        happiness: happiness,
+        energy: energy,
+        currentPetImage: currentPetImage,
+        currentBlinkImage: currentBlinkImage,
+        coins: coins,
+        level: level,
+        experience: experience,
+        foodInventory: foodInventory,
+        lastUpdated: DateTime.now(),
+      );
+
+      if (leveledUp) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Level Up! You're now at Level $level"))
+        );
       }
-    });
-
-    // Save after updating experience and level
-    String userId = _auth.currentUser!.uid;
-    await dbService.updateDatabase(
-      userId: userId,
-      hunger: hunger,
-      happiness: happiness,
-      energy: energy,
-      currentPetImage: currentPetImage,
-      currentBlinkImage: currentBlinkImage,
-      coins: coins,
-      level: level,
-      experience: experience,
-      foodInventory: foodInventory,
-      lastUpdated: DateTime.now(),
-    );
+    } catch (e) {
+      print("Error adding experience: $e");
+    }
   }
 
-  // Level up method
-  void levelUp() {
-    if (level >= 99) return;
+  // Method to handle food purchase
+  Future<void> _buyFood(String food, int price) async {
+    if (coins < price) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Not enough coins!'))
+      );
+      return;
+    }
 
-    setState(() {
-      level++;
-      experience = 0;
-    });
+    try {
+      // First update local state
+      setState(() {
+        coins -= price;
+        foodInventory[food] = (foodInventory[food] ?? 0) + 1;
+      });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Level Up! You're now at Level $level"))
-    );
+      // Then update database
+      String userId = _auth.currentUser!.uid;
+      await dbService.updateDatabase(
+        userId: userId,
+        hunger: hunger,
+        happiness: happiness,
+        energy: energy,
+        currentPetImage: currentPetImage,
+        currentBlinkImage: currentBlinkImage,
+        coins: coins, // Make sure coins is included here
+        level: level,
+        experience: experience,
+        foodInventory: foodInventory,
+        lastUpdated: DateTime.now(),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Purchased 1 ${food.capitalize()}!'))
+      );
+    } catch (e) {
+      print("Error buying food: $e");
+      // Revert local changes if database update fails
+      setState(() {
+        coins += price;
+        foodInventory[food] = (foodInventory[food] ?? 1) - 1;
+      });
+    }
   }
 
-  //Open Shop
-  void openShop(){
+  // Consistent dialog styling for all three functions
+  var dialogPadding = EdgeInsets.all(20.0);
+  var dialogTitleStyle = TextStyle(fontSize: 24, fontWeight: FontWeight.bold);
+  var dialogShape = RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+  );
+  var dialogHeightFactor = 0.7; // 70% of screen height
+
+  void openShop() {
     showModalBottomSheet(
       context: context,
-      builder:(context) => Container(
-        height: 300,
-        child:Center(child: Text('Welcome to the Shop!')),
+      isScrollControlled: true,
+      shape: dialogShape,
+      backgroundColor: Colors.white,
+      builder: (context) => Container(
+        padding: dialogPadding,
+        height: MediaQuery.of(context).size.height * dialogHeightFactor,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Shop', style: dialogTitleStyle),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.attach_money, color: Colors.amber),
+                Text(' $coins', style: TextStyle(fontSize: 20)),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                  childAspectRatio: 0.8,
+                ),
+                itemCount: foodKeys.length,
+                itemBuilder: (context, index) {
+                  final food = foodKeys[index];
+                  final price = _getFoodPrice(food);
+
+                  return Card(
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Image.asset(
+                            'assets/images/foods/${food}_food.png',
+                            height: 60,
+                          ),
+                          Text(
+                            food.capitalize(),
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text('$price coins', style: TextStyle(color: Colors.amber)),
+                          ElevatedButton(
+                            onPressed: () => _buyFood(food, price),
+                            child: Text('Buy'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: coins >= price ? Colors.green : Colors.grey,
+                              minimumSize: Size(double.infinity, 36),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void openBag() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: Colors.white,
-        child: Builder(
-          builder: (context) {
-            double width = MediaQuery.of(context).size.width;
-            double height = MediaQuery.of(context).size.height;
-            double modalWidth = width * 0.85; // Responsive width
-            double modalHeight = height * 0.6; // Responsive height
-
-            return Container(
-              width: modalWidth,
-              height: modalHeight,
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Your Bag',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+      isScrollControlled: true,
+      shape: dialogShape,
+      backgroundColor: Colors.white,
+      builder: (context) => Container(
+        padding: dialogPadding,
+        height: MediaQuery.of(context).size.height * dialogHeightFactor,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Your Bag', style: dialogTitleStyle),
+            const SizedBox(height: 20),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                  childAspectRatio: 0.9,
+                ),
+                itemCount: foodKeys.length,
+                itemBuilder: (context, index) {
+                  final foodName = foodKeys[index];
+                  final quantity = foodInventory[foodName] ?? 0;
+                  return Card(
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    child: GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: width < 600 ? 3 : 5, // 3 items on smaller devices, 5 on larger ones
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/images/foods/${foodName}_food.png',
+                            height: 60,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            foodName.capitalize(),
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'x$quantity',
+                            style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                          ),
+                        ],
                       ),
-                      itemCount: foodKeys.length, // number of items
-                      itemBuilder: (context, index) {
-                        final foodName = foodKeys[index];
-                        final quantity = foodInventory[foodName] ?? 0;
-                        return Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset(
-                              'assets/images/foods/${foodName}_food.png',
-                              height: width < 600 ? 40 : 80,
-                            ),
-                            const SizedBox(height: 4),
-                            Text('x$quantity', style: TextStyle(fontSize: width < 600 ? 12 : 16)),
-                          ],
-                        );
-                      },
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
     );
@@ -428,58 +586,73 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   void openGames() {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      isScrollControlled: true,
+      shape: dialogShape,
       backgroundColor: Colors.white,
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          height: MediaQuery.of(context).size.height * 0.4, // 40% of screen
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Mini Games',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      builder: (context) => Container(
+        padding: dialogPadding,
+        height: MediaQuery.of(context).size.height * dialogHeightFactor,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Mini Games', style: dialogTitleStyle),
+            const SizedBox(height: 20),
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 1.2,
+                children: [
+                  buildGameCard('Memory Match', 'assets/images/games/memory.png'),
+                  buildGameCard('Puzzle Pop', 'assets/images/games/puzzle.png'),
+                  // Add more games as needed
+                ],
               ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  children: [
-                    buildGameCard('Memory Match', 'assets/images/games/memory.png'),
-                    buildGameCard('Puzzle Pop', 'assets/images/games/puzzle.png'),
-                    // Add more games as needed
-                  ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildGameCard(String title, String imagePath) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          // Add game launch functionality here
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Image.asset(
+                imagePath,
+                height: 80,
+              ),
+              Text(
+                title,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  // Add game launch functionality here
+                },
+                child: Text('Play'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  minimumSize: Size(double.infinity, 40),
                 ),
               ),
             ],
           ),
-        );
-      },
-    );
-  }
-  Widget buildGameCard(String title, String imagePath) {
-    return GestureDetector(
-      onTap: () {
-        // Navigate or open the game
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(imagePath, height: 60),
-            const SizedBox(height: 10),
-            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-          ],
         ),
       ),
     );
@@ -699,5 +872,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         Text('$value%', style: const TextStyle(fontSize: 14)),
       ],
     );
+  }
+}
+
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${this.substring(1)}";
   }
 }
