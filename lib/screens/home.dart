@@ -37,6 +37,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   bool isBlinking = false;
   bool isMoodChanging = false;
   bool isHungerChangning = false;
+  bool isLampOn = false;
+  Timer? sleepTimer;
 
   //Loading Animation
   bool _isLoading = true;
@@ -726,6 +728,70 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
+  void toggleLamp() {
+    setState(() {
+      isLampOn = !isLampOn;
+
+      if (isLampOn) {
+        currentPetImage = 'assets/images/tiger/tiger_blink.png';
+        currentBlinkImage = 'assets/images/tiger/tiger_blink.png';
+
+        sleepTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
+          if (energy < 100) {
+            setState(() {
+              energy += 1;
+            });
+
+            await dbService.updateDatabase(
+              userId: currentUser!.uid,
+              hunger: hunger,
+              happiness: happiness,
+              energy: energy,
+              currentPetImage: currentPetImage,
+              currentBlinkImage: currentBlinkImage,
+              coins: coins,
+              level: level,
+              experience: experience,
+              foodInventory: foodInventory,
+              lastUpdated: DateTime.now(),
+            );
+          } else {
+            toggleLamp(); // Stop sleep when full
+          }
+        });
+      } else {
+        sleepTimer?.cancel();
+        sleepTimer = null;
+
+        if (happiness > 50) {
+          currentPetImage = 'assets/images/tiger/tiger_happy.png';
+          currentBlinkImage = 'assets/images/tiger/tiger_blink.png';
+        } else if (happiness == 50) {
+          currentPetImage = 'assets/images/tiger/tiger_normal.png';
+          currentBlinkImage = 'assets/images/tiger/tiger_normal_blink.png';
+        } else {
+          currentPetImage = 'assets/images/tiger/tiger_sad.png';
+          currentBlinkImage = 'assets/images/tiger/tiger_sad_blink.png';
+        }
+
+        // Save stats when lamp is turned off
+        dbService.updateDatabase(
+          userId: currentUser!.uid,
+          hunger: hunger,
+          happiness: happiness,
+          energy: energy,
+          currentPetImage: currentPetImage,
+          currentBlinkImage: currentBlinkImage,
+          coins: coins,
+          level: level,
+          experience: experience,
+          foodInventory: foodInventory,
+          lastUpdated: DateTime.now(),
+        );
+      }
+    });
+  }
+
   Widget _buildColorOption(Color color, String label) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -848,7 +914,15 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     onPressed: openGames,
                     tooltip: 'Mini Games',
                   ),
-
+                  IconButton(
+                    icon: Icon(
+                      isLampOn ? Icons.lightbulb : Icons.lightbulb_outline,
+                      size: 50,
+                      color: isLampOn ? Colors.black : Colors.yellow,
+                    ),
+                    onPressed: toggleLamp,
+                    tooltip: 'Toggle Sleep Lamp',
+                  ),
                   // Settings button on right
                   IconButton(
                     icon: Icon(Icons.settings, size: 30),
@@ -864,7 +938,47 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   alignment: Alignment.center,
                   children: [
                     DragTarget<String>(
-                      onAccept: (food) => feedTiger(food), // Feeding logic
+                      onWillAccept: (food) {
+                        // Change tiger image when food hovers over it
+                        setState(() {
+                          currentPetImage = 'assets/images/tiger/tiger_open_mouth.png';
+                        });
+                        return true; // Allow the food to be accepted
+                      },
+                      onLeave: (food) {
+                        // Reset image when food leaves without being dropped
+                        setState(() {
+
+                          if (happiness > 50) {
+                            currentPetImage = 'assets/images/tiger/tiger_happy.png';
+                            currentBlinkImage = 'assets/images/tiger/tiger_blink.png';
+                          } else if (happiness == 50) {
+                            currentPetImage = 'assets/images/tiger/tiger_normal.png';
+                            currentBlinkImage = 'assets/images/tiger/tiger_normal_blink.png';
+                          } else {
+                            currentPetImage = 'assets/images/tiger/tiger_sad.png';
+                            currentBlinkImage = 'assets/images/tiger/tiger_sad_blink.png';
+                          }
+
+                        });
+                      },
+                      onAccept: (food) {
+                        // Finalize feeding and image
+                        feedTiger(food); // Your feeding logic
+
+                        setState(() {
+                          if (happiness > 50) {
+                            currentPetImage = 'assets/images/tiger/tiger_happy.png';
+                            currentBlinkImage = 'assets/images/tiger/tiger_blink.png';
+                          } else if (happiness == 50) {
+                            currentPetImage = 'assets/images/tiger/tiger_normal.png';
+                            currentBlinkImage = 'assets/images/tiger/tiger_normal_blink.png';
+                          } else {
+                            currentPetImage = 'assets/images/tiger/tiger_sad.png';
+                            currentBlinkImage = 'assets/images/tiger/tiger_sad_blink.png';
+                          }
+                        });
+                      },
                       builder: (context, candidateData, rejectedData) {
                         return Stack(
                           alignment: Alignment.center,
