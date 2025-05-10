@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/database_service.dart';
 import 'dart:math';
 import 'splash_screen.dart';
+import 'package:tomas_tigerpet/ui/pages/startup_page.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -623,8 +624,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 crossAxisSpacing: 20,
                 childAspectRatio: 1.2,
                 children: [
-                  buildGameCard('Memory Match', 'assets/images/games/memory.png'),
-                  buildGameCard('Puzzle Pop', 'assets/images/games/puzzle.png'),
+                  buildGameCard('Memory Match', 'assets/images/games/CardMatch.png'),
+                  buildGameCard('Tiger Run', 'assets/images/games/puzzle.png'),
                   // Add more games as needed
                 ],
               ),
@@ -662,7 +663,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               ),
               ElevatedButton(
                 onPressed: () {
-                  // Add game launch functionality here
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => StartUpPage()),
+                  );
                 },
                 child: Text('Play'),
                 style: ElevatedButton.styleFrom(
@@ -845,7 +849,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                   Padding(
+                  Padding(
                     padding: EdgeInsets.only(left: 10),
                     child: Row(
                       children: [
