@@ -645,7 +645,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       elevation: 3,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-      ), 
+      ),
       child: Padding(
         padding: const EdgeInsets.all(15.0),
         child: Column(
@@ -662,18 +662,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             ),
             ElevatedButton(
               onPressed: () {
-                if (title == 'Memory Match') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const StartUpPage()),
-                  );
-                } else if (title == 'Endless Run') {
-                  // Replace with your Endless Run screen
-                 Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MyApp()),
-                  );
-                }
+                _onPlayButtonPressed(title); // Pass title to determine which game was pressed
               },
               child: Text('Play'),
               style: ElevatedButton.styleFrom(
@@ -685,6 +674,101 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  void _onPlayButtonPressed(String title) async {
+    if (title == 'Memory Match') {
+      // Show a confirmation dialog before spending energy for Memory Match
+      if (energy >= 10) {
+        bool? confirmPlay = await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+              ),
+              title: Text(
+                'Memory Match Game!',
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              content: Text(
+                'This game will cost you 10 Energy. Do you want to continue?',
+                style: TextStyle(fontSize: 16),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false);  // User cancels the action
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);  // User confirms the action
+                  },
+                  child: Text(
+                    'Confirm',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+              backgroundColor: Colors.lightGreen,
+            );
+          },
+        );
+
+        // If the user confirms, proceed with the energy deduction and navigation
+        if (confirmPlay == true) {
+          setState(() {
+            energy -= 10;  // Reduce energy by 10
+          });
+
+          // Update Firestore with the new energy value
+          String userId = _auth.currentUser!.uid;
+          await dbService.updateDatabase(
+            userId: userId,
+            hunger: hunger,
+            happiness: happiness,
+            energy: energy,
+            currentPetImage: currentPetImage,
+            currentBlinkImage: currentBlinkImage,
+            coins: coins,
+            level: level,
+            experience: experience,
+            foodInventory: foodInventory,
+            lastUpdated: DateTime.now(),
+          );
+          // Navigate to the Memory Match game screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const StartUpPage()),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Not enough energy to play!')),
+        );
+      }
+    } else if (title == 'Endless Run') {
+      // Directly navigate to the Endless Run game screen without confirmation
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MyApp()),
+      );
+    }
   }
 
   void _openSettings() {
