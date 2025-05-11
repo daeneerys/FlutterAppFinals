@@ -758,8 +758,31 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           );
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Not enough energy to play!')),
+        // Show an alert dialog for not enough energy
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+              ),
+              title: Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  icon: Icon(Icons.close, color: Colors.black),
+                  onPressed: () {
+                    Navigator.of(context).pop();  // Close the dialog
+                  },
+                ),
+              ),
+              content: Text(
+                'Not enough energy to play! Tomas needs to rest.',
+                style: TextStyle(fontSize: 25),
+                textAlign: TextAlign.center,
+              ),
+              backgroundColor: Colors.lightGreen,
+            );
+          },
         );
       }
     } else if (title == 'Endless Run') {
