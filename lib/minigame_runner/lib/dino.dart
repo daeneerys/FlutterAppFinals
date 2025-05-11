@@ -62,7 +62,7 @@ class Dino extends GameObject {
   void update(Duration lastUpdate, Duration? elapsedTime) {
     double elapsedTimeSeconds;
     try {
-      currentSprite = dino[(elapsedTime!.inMilliseconds / 100).floor() % 2 + 2];
+      currentSprite = dino[(elapsedTime!.inMilliseconds / 250).floor() % 2 + 2];
     } catch (_) {
       currentSprite = dino[0];
     }

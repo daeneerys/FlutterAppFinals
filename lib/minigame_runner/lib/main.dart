@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tomas_tigerpet/screens/home.dart';
 import 'cactus.dart';
 import 'cloud.dart';
 import 'dino.dart';
@@ -447,20 +448,11 @@ class _MyHomePageState extends State<MyHomePage>
                             ),
                             TextButton(
                               onPressed: () {
-                                gravity = int.parse(gravityController.text);
-                                acceleration =
-                                    double.parse(accelerationController.text);
-                                initialVelocity =
-                                    double.parse(runVelocityController.text);
-                                jumpVelocity =
-                                    double.parse(jumpVelocityController.text);
-                                dayNightOffest =
-                                    int.parse(dayNightOffestController.text);
                                 Navigator.of(context).pop();
                               },
                               child: const Text(
-                                "Done",
-                                style: TextStyle(color: Colors.grey),
+                                "Close",
+                                style: TextStyle(color: Colors.black),
                               ),
                             )
                           ],
@@ -477,8 +469,29 @@ class _MyHomePageState extends State<MyHomePage>
                     _die();
                   },
                   child: const Text(
-                    "Force Kill Dino",
+                    "Stop & Restart",
                     style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 30,
+                child: TextButton(
+                  onPressed: () {
+                    if (dino.state == DinoState.dead) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const Home()),
+                      );
+                    }
+                    const Text(
+                      "Quit",
+                      style: TextStyle(color: Colors.yellow),
+                    );
+                  },
+                  child: const Text(
+                    "Quit",
+                    style: TextStyle(color: Colors.grey),
                   ),
                 ),
               ),
