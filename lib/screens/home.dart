@@ -4,8 +4,12 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/database_service.dart';
 import 'dart:math';
+import '../ui/pages/startup_page.dart';
 import 'splash_screen.dart';
 import 'package:tomas_tigerpet/minigame_runner/lib/main.dart';
+
+import 'package:tomas_tigerpet/ui/pages/startup_page.dart';
+
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -641,43 +645,43 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       elevation: 3,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          // Add game launch functionality here
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Image.asset(
-                imagePath,
-                height: 80,
-              ),
-              Text(
-                title,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  // Add game launch functionality here
-                  Navigator.pushReplacement(
+      ), 
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Image.asset(
+              imagePath,
+              height: 80,
+            ),
+            Text(
+              title,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (title == 'Memory Match') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const StartUpPage()),
+                  );
+                } else if (title == 'Endless Run') {
+                  // Replace with your Endless Run screen
+                 Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (context) => const MyApp()),
                   );
-
-                },
-                child: Text('Play'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  minimumSize: Size(double.infinity, 40),
-                ),
+                }
+              },
+              child: Text('Play'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                minimumSize: Size(double.infinity, 40),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -851,7 +855,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                   Padding(
+                  Padding(
                     padding: EdgeInsets.only(left: 10),
                     child: Row(
                       children: [
