@@ -12,7 +12,9 @@ import 'package:tomas_tigerpet/ui/pages/startup_page.dart';
 
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  final int rewardCoins;
+  final int energyCost;
+  const Home({super.key, this.rewardCoins = 0, this.energyCost = 0});
 
   @override
   State<Home> createState() => _HomeState();
@@ -140,6 +142,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         }
         Map<String, dynamic> petStats = data['petStats'];
 
+
         // Get the lastUpdated time
         Timestamp lastUpdatedTimestamp = petStats['lastUpdated'];
         DateTime lastUpdated = lastUpdatedTimestamp.toDate();
@@ -181,6 +184,32 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         experience = petStats['experience'];
         level = petStats['level'];
         coins = petStats['coins'];
+
+        // ✅ REWARD COINS if high score was 100 or more
+        if (widget.rewardCoins > 0) {
+          coins += widget.rewardCoins;
+
+          // Optional: Show a snackbar reward message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('You earned ${widget.rewardCoins} coins for your high score! 🎉'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+
+        // Apply energy cost if coming from the game
+        if (widget.energyCost > 0) {
+          energy = (energy - widget.energyCost).clamp(0, 100); // Ensure it's between 0 and 100
+
+          // Optional: Show feedback
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Energy reduced by ${widget.energyCost} from playing the game. ⚡'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
 
         // Save updated values to Firestore
         await dbService.updateDatabase(
