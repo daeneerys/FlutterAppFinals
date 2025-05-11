@@ -6,7 +6,10 @@ import '../services/database_service.dart';
 import 'dart:math';
 import '../ui/pages/startup_page.dart';
 import 'splash_screen.dart';
+import 'package:tomas_tigerpet/minigame_runner/lib/main.dart';
+
 import 'package:tomas_tigerpet/ui/pages/startup_page.dart';
+
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -626,7 +629,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 childAspectRatio: 1.2,
                 children: [
                   buildGameCard('Memory Match', 'assets/images/games/CardMatch.png'),
-                  buildGameCard('Tiger Run', 'assets/images/games/puzzle.png'),
+                  buildGameCard('Endless Run', 'assets/images/games/DinoRun.png'),
                   // Add more games as needed
                 ],
               ),
@@ -642,7 +645,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       elevation: 3,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-      ),
+      ), 
       child: Padding(
         padding: const EdgeInsets.all(15.0),
         child: Column(
@@ -666,9 +669,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   );
                 } else if (title == 'Endless Run') {
                   // Replace with your Endless Run screen
-                  Navigator.push(
+                 Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => StartUpPage()),
+                    MaterialPageRoute(builder: (context) => const MyApp()),
                   );
                 }
               },
