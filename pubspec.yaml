@@ -82,6 +82,8 @@ flutter:
     - assets/images/etc/games_icon.png
     - assets/images/games/CardMatch.png
     - assets/images/games/DinoRun.png
+    - assets/images/games/background.png
+    - assets/images/games/gametitle.png
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
