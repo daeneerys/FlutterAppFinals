@@ -478,10 +478,20 @@ class _MyHomePageState extends State<MyHomePage>
                 bottom: 30,
                 child: TextButton(
                   onPressed: () {
+                    final int finalHighScore = highScore;
+                    final int rewardCoins = finalHighScore >= 100 ? 10 : 0;
+                    final int energyCost = Random().nextInt(8) + 1; // random 1 to 8
+
                     if (dino.state == DinoState.dead) {
+                      int finalHighScore = highScore;
                       Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const Home()),
+                          context,
+                          MaterialPageRoute(
+                          builder: (context) => Home(
+                            rewardCoins: rewardCoins,
+                            energyCost: energyCost,
+                      )
+                          )
                       );
                     }
                     const Text(
