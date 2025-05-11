@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/database_service.dart';
 import 'dart:math';
 import 'splash_screen.dart';
+import 'package:tomas_tigerpet/minigame_runner/lib/main.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -623,8 +624,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 crossAxisSpacing: 20,
                 childAspectRatio: 1.2,
                 children: [
-                  buildGameCard('Memory Match', 'assets/images/games/memory.png'),
-                  buildGameCard('Puzzle Pop', 'assets/images/games/puzzle.png'),
+                  buildGameCard('Memory Match', 'assets/images/games/CardMatch.png'),
+                  buildGameCard('Endless Run', 'assets/images/games/DinoRun.png'),
                   // Add more games as needed
                 ],
               ),
@@ -663,6 +664,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               ElevatedButton(
                 onPressed: () {
                   // Add game launch functionality here
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MyApp()),
+                  );
+
                 },
                 child: Text('Play'),
                 style: ElevatedButton.styleFrom(
