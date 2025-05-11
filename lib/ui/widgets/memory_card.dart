@@ -36,7 +36,7 @@ class MemoryCard extends StatelessWidget {
         color:
             card.state == CardState.visible || card.state == CardState.guessed
                 ? card.color
-                : Colors.yellow,
+                : Colors.yellow[900],
         child: Center(
           child: card.state == CardState.hidden
               ? null

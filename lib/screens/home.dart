@@ -628,7 +628,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 crossAxisSpacing: 20,
                 childAspectRatio: 1.2,
                 children: [
-                  buildGameCard('Memory Match', 'assets/images/games/CardMatch.png'),
+                  buildGameCard('Memory Match', 'assets/images/games/memorymatch.png'),
                   buildGameCard('Endless Run', 'assets/images/games/DinoRun.png'),
                   // Add more games as needed
                 ],

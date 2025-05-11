@@ -43,7 +43,7 @@ class StartUpPage extends StatelessWidget {
                 children: [
                   // Logo
                   Image.asset(
-                    'assets/images/games/gametitle.png',
+                    'assets/images/games/memorynobg.png',
                     width: 600,
                     height: 430,
                     fit: BoxFit.contain,
